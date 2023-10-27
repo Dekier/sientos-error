@@ -1,6 +1,21 @@
 <script setup lang="ts">
 import { PCFSoftShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from "three";
 
+const title = ref("Marcin Dekier");
+const description = ref("Marcin Dekier Sandbox (Portfolio)");
+useHead({
+  title,
+  meta: [
+    {
+      name: "description",
+      content: description,
+    },
+  ],
+});
+const characterStore = useCharacterStore();
+const { positionCharacter } = storeToRefs(characterStore);
+
+const { isMobile } = useDevice();
 const gl = {
   alfa: false,
   shadows: true,
@@ -13,35 +28,32 @@ const gl = {
   powerPreference: "high-performance",
 };
 
-const { onLoop } = useRenderLoop();
-onLoop(() => {
-  console.log("lol");
-});
+const isActiveAntialias = ref(false);
+isActiveAntialias.value = isMobile ? false : true;
 </script>
 
 <template>
-  <TresCanvas
-    clear-color="#E0D6BE"
-    window-size
-    ref="renderer"
-    v-bind="gl"
-    :antialias="true"
-  >
-    <TresPerspectiveCamera
-      :position="[-8, 7, 25]"
-      :fov="70"
-      :aspect="1"
-      :near="0.1"
-      :far="100"
-    />
-    <OrbitControls
-      :enablePan="false"
-      :minDistance="17"
-      :maxDistance="80"
-      :maxPolarAngle="Math.PI / 2"
-    />
+  <HudGeneral />
+  <LoadingScreen />
+  <client-only>
+    <Joystick v-if="isMobile" />
     <Suspense>
-      <Lantern />
+      <ControllerGamepad v-if="positionCharacter" />
+    </Suspense>
+  </client-only>
+  <TresCanvas
+    clear-color="#DBC295"
+    window-size
+    v-bind="gl"
+    :antialias="isActiveAntialias"
+  >
+    <Camera />
+    <Light />
+    <Suspense>
+      <ModelsCharacterAll />
+    </Suspense>
+    <Suspense>
+      <ModelsToolBox v-if="positionCharacter" />
     </Suspense>
   </TresCanvas>
 </template>
